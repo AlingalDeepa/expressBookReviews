@@ -30,7 +30,7 @@ let validusers = users.filter((user)=>{
 }
 
 //only registered users can login
-regd_users.post("/customer/login", (req,res) => {
+regd_users.post("/login", (req,res) => {
   //Write your code here
   const username = req.body.username;
     const password = req.body.password;
@@ -57,6 +57,7 @@ regd_users.post("/customer/login", (req,res) => {
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
+  
   return res.status(300).json({message: "Yet to be implemented"});
 });
 
