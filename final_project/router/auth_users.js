@@ -5,8 +5,8 @@ const regd_users = express.Router();
 
 let users = [];
 
-const isValid = (username)=>{ //returns boolean
-//write code to check is the username is valid
+const isValid = (username)=>{ 
+
 let userswithsamename = users.filter((user)=>{
     return user.username === username
   });
@@ -33,7 +33,7 @@ let validusers = users.filter((user)=>{
 regd_users.post("/login", (req,res) => {
   //Write your code here
   const username = req.body.username;
-    const password = req.body.password;
+  const password = req.body.password;
   
     if (!username || !password) {
         return res.status(404).json({message: "Error logging in"});
@@ -42,11 +42,18 @@ regd_users.post("/login", (req,res) => {
     if (authenticatedUser(username,password)) {
       let accessToken = jwt.sign({
         data: password
-      }, 'access', { expiresIn: 60 });
+      }, 'access', { expiresIn: 60 * 60 });
   
       req.session.authorization = {
         accessToken,username
-    }
+    };
+
+    console.log('Session:', req.session); // Log the entire session object
+console.log('Authorization:', req.session.authorization); // Log the authorization object
+console.log('Username:', req.session.authorization.username); // Log the username
+
+
+    
     return res.status(200).send("User successfully logged in");
     } else {
       return res.status(208).json({message: "Invalid Login. Check username and password"});
@@ -66,28 +73,34 @@ if (!books[isbn]) {
 }
 
 const book = books[isbn];
+const existingReview = book.reviews.find(existingReview => existingReview.username === username);
 
-if (book.reviews[username]) {
- 
-  book.reviews[username] = review;
-  res.json({ message: 'Review modified successfully.' });
-} else {
-  
-   book.reviews.push({ username:username, review });
-   res.json({ message: 'Review added successfully.' });
-}
+if (existingReview) {
+    // Modify the existing review
+    existingReview.review = review;
+    res.json({ message: 'Review modified successfully.' });
+  } else {
+    // Add a new review
+    book.reviews.push({ username, review });
+    res.json({ message: 'Review added successfully.' });
+  }
 
-res.send("Isbn: "+ isbn + " review " + books[isbn]);
-
-return res.status(300).json({message: "Yet to be implemented"});
 });
 
 
 // Add a book review
-regd_users.put("/auth/delete/:isbn", (req, res) => {
+regd_users.delete("/auth/delete/:isbn", (req, res) => {
 
-  const username = req.body.username;
+console.log('Session:', req.session); // Log the entire session object
+console.log('Authorization:', req.session.authorization); // Log the authorization object
+console.log('Username:', req.session.authorization.username); // Log the username
+
+
+  const username = req.session.authorization.username;
+  
   const isbn = req.params.isbn;
+  console.log('ISBN:', isbn);
+
 
   // Check if the book with the given ISBN exists
   if (!books[isbn]) {
@@ -96,18 +109,20 @@ regd_users.put("/auth/delete/:isbn", (req, res) => {
 
   const book = books[isbn];
 
+  console.log('Username:', username);
+  console.log('Book Reviews:', book.reviews);
 
-  //book.reviews = book.reviews.filter((existingReview) => existingReview.username !== username);
   const indexToRemove = book.reviews.findIndex(existingReview => existingReview.username === username);
 
 if (indexToRemove !== -1) {
   book.reviews.splice(indexToRemove, 1);
+  console.log('Index to Remove:', indexToRemove);
+  return res.json({ message: 'Review deleted successfully.' });
 }
 
-  res.json({ message: 'Review deleted successfully.' });
+  return res.json({ message: 'Review not found!' });
 });
  
-
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
 module.exports.users = users;
