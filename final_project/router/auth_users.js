@@ -56,10 +56,57 @@ regd_users.post("/login", (req,res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
+ 
+const { username, review } = req.body;
+const isbn = req.params.isbn;
+
+// Check if the book with the given ISBN exists
+if (!books[isbn]) {
+  return res.status(404).json({ error: 'Book not found.' });
+}
+
+const book = books[isbn];
+
+if (book.reviews[username]) {
+ 
+  book.reviews[username] = review;
+  res.json({ message: 'Review modified successfully.' });
+} else {
   
-  return res.status(300).json({message: "Yet to be implemented"});
+   book.reviews.push({ username:username, review });
+   res.json({ message: 'Review added successfully.' });
+}
+
+res.send("Isbn: "+ isbn + " review " + books[isbn]);
+
+return res.status(300).json({message: "Yet to be implemented"});
 });
+
+
+// Add a book review
+regd_users.put("/auth/delete/:isbn", (req, res) => {
+
+  const username = req.body.username;
+  const isbn = req.params.isbn;
+
+  // Check if the book with the given ISBN exists
+  if (!books[isbn]) {
+    return res.status(404).json({ error: 'Book not found.' });
+  }
+
+  const book = books[isbn];
+
+
+  //book.reviews = book.reviews.filter((existingReview) => existingReview.username !== username);
+  const indexToRemove = book.reviews.findIndex(existingReview => existingReview.username === username);
+
+if (indexToRemove !== -1) {
+  book.reviews.splice(indexToRemove, 1);
+}
+
+  res.json({ message: 'Review deleted successfully.' });
+});
+ 
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
